@@ -2,7 +2,7 @@
 
 # Tile Matching Application
 
-This application matches photos of tiles taken on-the-fly with a catalog of reference tile images.
+This is my final project for the course CAI2840C-2253-7384 Introduction to Computer Vision. The application matches photos of tiles taken on-the-fly with a catalog of reference tile images.
 
 ## Features
 
