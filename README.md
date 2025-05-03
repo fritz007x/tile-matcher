@@ -4,7 +4,7 @@ emoji: 🏷️
 colorFrom: blue
 colorTo: red
 sdk: streamlit
-sdk_version: 1.41.0
+sdk_version: 1.45.0
 app_file: hf_app.py
 pinned: false
 ---
