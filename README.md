@@ -1,3 +1,13 @@
+---
+title: Tile Matcher
+emoji: 🏷️
+colorFrom: blue
+colorTo: red
+sdk: streamlit
+sdk_version: 1.25.0
+app_file: hf_app.py
+pinned: false
+---
 # Tile Matching Application
 
 This application matches photos of tiles taken on-the-fly with a catalog of reference tile images.
