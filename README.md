@@ -1,40 +1,23 @@
----
-title: Tile Matcher
-emoji: 🏷️
-colorFrom: blue
-colorTo: red
-sdk: gradio
-sdk_version: 3.50.0
-app_file: gradio_app.py
-pinned: false
----
+
 
 # Tile Matching Application
 
-This application matches photos of tiles taken on-the-fly with a catalog of reference tile images.
+This is my final project for the course CAI2840C-2253-7384 Introduction to Computer Vision. The application matches photos of tiles taken on-the-fly with a catalog of reference tile images.
 
 ## Features
 
 - **Catalog Management**: Organize and manage a collection of reference tile images
-- **Image Capture**: Take photos using a camera interface
-- **Advanced Image Processing**: Handles real-world photography challenges like:
+- **Advanced Image Processing**: Handles real-world image matching challenges like:
   - Shadows
   - Light reflections
   - Varying backgrounds
   - Lower quality captures
+    
 - **Intelligent Matching**: Uses computer vision and deep learning to match tiles accurately
 
 ## Interface Options
 
-This application comes with two interface options:
-
-1. **Gradio Interface** (`gradio_app.py`): 
-   - Optimized for Hugging Face Spaces deployment
-   - Simpler runtime model with better performance
-   - Improved compatibility with transformer models
-
-2. **Streamlit Interface** (`streamlit_app.py`): 
-   - Comprehensive data app experience
+This application comes with a *Streamlit Interface* option (`streamlit_app.py`): 
    - Rich interactive components
    - Good for local development
 
@@ -43,37 +26,26 @@ This application comes with two interface options:
 1. Clone this repository
 2. Install the requirements:
    ```bash
-   # For Gradio interface (recommended for Hugging Face deployment)
-   pip install -r requirements-gradio.txt
-   
-   # For Streamlit interface
+    # For Streamlit interface
    pip install -r requirements-streamlit.txt
    ```
 
 ## Usage
-
-### Gradio Interface (Default)
-```bash
-python gradio_app.py
-```
-
-### Streamlit Interface
 ```bash
 streamlit run streamlit_app.py
 ```
 
 ## Technical Details
 
-The application uses several computer vision techniques:
-- Feature extraction (SIFT, ORB)
+The application uses the following computer vision techniques:
+- Feature extraction with ORB 
 - Deep learning-based image similarity
 - Image preprocessing to handle real-world conditions
-- Hybrid matching algorithm for best results
+
 
 ## Project Structure
 
-- `gradio_app.py`: Gradio web interface (optimized for Hugging Face Spaces)
-- `streamlit_app.py`: Streamlit web interface (alternative option)
+- `streamlit_app.py`: Streamlit web interface 
 - `tile_matcher/`: Core functionality modules
   - `matcher.py`: Feature-based tile matching algorithms
   - `preprocessing.py`: Image preprocessing functions
