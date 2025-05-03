@@ -3,9 +3,9 @@ title: Tile Matcher
 emoji: 🏷️
 colorFrom: blue
 colorTo: red
-sdk: streamlit
-sdk_version: 1.25.0
-app_file: hf_app.py
+sdk: gradio
+sdk_version: 3.50.0
+app_file: gradio_app.py
 pinned: false
 ---
 
@@ -24,22 +24,43 @@ This application matches photos of tiles taken on-the-fly with a catalog of refe
   - Lower quality captures
 - **Intelligent Matching**: Uses computer vision and deep learning to match tiles accurately
 
+## Interface Options
+
+This application comes with two interface options:
+
+1. **Gradio Interface** (`gradio_app.py`): 
+   - Optimized for Hugging Face Spaces deployment
+   - Simpler runtime model with better performance
+   - Improved compatibility with transformer models
+
+2. **Streamlit Interface** (`streamlit_app.py`): 
+   - Comprehensive data app experience
+   - Rich interactive components
+   - Good for local development
+
 ## Installation
 
 1. Clone this repository
-2. Install requirements:
-   ```
-   pip install -r requirements.txt
+2. Install the requirements:
+   ```bash
+   # For Gradio interface (recommended for Hugging Face deployment)
+   pip install -r requirements-gradio.txt
+   
+   # For Streamlit interface
+   pip install -r requirements-streamlit.txt
    ```
 
 ## Usage
 
-1. Start the application:
-   ```
-   python app.py
-   ```
-2. Upload catalog images through the web interface
-3. Use the camera function to match tiles in real-time
+### Gradio Interface (Default)
+```bash
+python gradio_app.py
+```
+
+### Streamlit Interface
+```bash
+streamlit run streamlit_app.py
+```
 
 ## Technical Details
 
@@ -51,11 +72,10 @@ The application uses several computer vision techniques:
 
 ## Project Structure
 
-- `app.py`: Main application entry point
-- `tile_matcher/`: Core matching functionality
-  - `preprocessing.py`: Image enhancement and preparation
-  - `matcher.py`: Matching algorithms
-  - `models.py`: Deep learning models
-- `static/`: Web assets (CSS, JS, etc.)
-- `templates/`: HTML templates
+- `gradio_app.py`: Gradio web interface (optimized for Hugging Face Spaces)
+- `streamlit_app.py`: Streamlit web interface (alternative option)
+- `tile_matcher/`: Core functionality modules
+  - `matcher.py`: Feature-based tile matching algorithms
+  - `preprocessing.py`: Image preprocessing functions
+  - `vit_matcher.py`: Vision Transformer-based matching
 - `catalog/`: Default location for catalog images
