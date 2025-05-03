@@ -1,13 +1,4 @@
----
-title: Tile Matcher
-emoji: 🏷️
-colorFrom: blue
-colorTo: red
-sdk: gradio
-sdk_version: 3.50.0
-app_file: gradio_app.py
-pinned: false
----
+
 
 # Tile Matching Application
 
