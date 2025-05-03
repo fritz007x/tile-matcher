@@ -19,11 +19,14 @@ import shutil
 
 from tile_matcher.preprocessing import ImagePreprocessor
 from tile_matcher.matcher import TileMatcher
+
+# Try to import the ViT matcher if available
 try:
     from tile_matcher.vit_matcher import ViTTileMatcher
     VIT_AVAILABLE = True
 except ImportError:
     VIT_AVAILABLE = False
+    st.warning("Vision Transformer (ViT) is not available. Using feature-based matching only.")
 
 # Configuration
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -122,18 +125,17 @@ def main():
     
     # Filter unavailable options
     if not VIT_AVAILABLE:
-        matcher_options.remove("Vision Transformer (ViT)")
-        matcher_types.remove("vit")
-    
-    if len(matcher_options) > 1:
+        matcher_options = ["Feature-based (ORB)"]
+        matcher_types = ["feature"]
+        selected_matcher_type = "feature"
+    else:
+        # Allow matcher selection when ViT is available
         matcher_index = st.sidebar.selectbox(
             "Select matching method",
             range(len(matcher_options)),
             format_func=lambda i: matcher_options[i]
         )
         selected_matcher_type = matcher_types[matcher_index]
-    else:
-        selected_matcher_type = "feature"
     
     matcher, actual_matcher_type = get_matcher(selected_matcher_type)
     
@@ -167,6 +169,7 @@ def main():
                 # Display matches
                 if matches and len(matches) > 0:
                     st.subheader("Best Matches")
+                    st.write(f"Using matcher: {actual_matcher_type.upper()}")
                     
                     match_cols = st.columns(min(5, len(matches)))
                     
@@ -207,7 +210,7 @@ def main():
             
             if added_count > 0:
                 st.success(f"Successfully added {added_count} images to the catalog")
-                st.experimental_rerun()  # Refresh the app
+                st.rerun()  # Refresh the app
         
         # Display catalog images
         st.subheader("Current Catalog")
@@ -240,7 +243,7 @@ def main():
                                 try:
                                     os.remove(item['path'])
                                     st.success(f"Removed {item['name']} from catalog")
-                                    st.experimental_rerun()  # Refresh the app
+                                    st.rerun()  # Refresh the app
                                 except Exception as e:
                                     st.error(f"Error removing file: {e}")
         else:
