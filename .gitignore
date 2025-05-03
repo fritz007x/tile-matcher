@@ -1,0 +1,67 @@
+# Python bytecode files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+.venv
+env.bak/
+venv.bak/
+
+# IDE related
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Application specific
+static/uploads/
+catalog/
+*.log
+*.sqlite
+*.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# TensorFlow and PyTorch related
+.keras/
+.local/
+*.h5
+*.pb
+*.pth
+
+# Model directories that might be large
+models/
+checkpoints/
+runs/
+
+# Temporary files
+*~
+*.bak
+*.tmp
+temp/
+tmp/

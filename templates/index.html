@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block title %}Tile Matcher - Match Your Tiles{% endblock %}
+
+{% block extra_head %}
+<style>
+    .catalog-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    .catalog-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.2s;
+    }
+    .catalog-item:hover {
+        transform: scale(1.03);
+    }
+    .catalog-img-container {
+        height: 200px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+    .catalog-img-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .catalog-detail {
+        padding: 10px;
+    }
+    .match-result {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+    .match-score-high {
+        background-color: #d4edda;
+    }
+    .match-score-medium {
+        background-color: #fff3cd;
+    }
+    .match-score-low {
+        background-color: #f8d7da;
+    }
+    .match-img-container {
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+    .match-img-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .match-details {
+        padding: 10px;
+    }
+    .progress {
+        height: 25px;
+    }
+    #camera-view {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+    #cameraContainer {
+        display: none;
+    }
+    #matchResults {
+        display: none;
+    }
+    .nav-tabs {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">Tile Matcher</h2>
+        
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="match-tab" data-bs-toggle="tab" data-bs-target="#match" type="button" role="tab" aria-controls="match" aria-selected="true">Match Tiles</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="catalog-tab" data-bs-toggle="tab" data-bs-target="#catalog" type="button" role="tab" aria-controls="catalog" aria-selected="false">Manage Catalog</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="myTabContent">
+            <!-- Match Tiles Tab -->
+            <div class="tab-pane fade show active" id="match" role="tabpanel" aria-labelledby="match-tab">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Upload Image or Use Camera</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="uploadContainer">
+                                    <form id="uploadForm" enctype="multipart/form-data">
+                                        <div class="mb-3">
+                                            <label for="fileUpload" class="form-label">Choose an image to match</label>
+                                            <input class="form-control" type="file" id="fileUpload" accept=".jpg,.jpeg,.png">
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary">Match This Tile</button>
+                                            <button type="button" id="showCamera" class="btn btn-outline-secondary">Use Camera Instead</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <div id="cameraContainer">
+                                    <div class="mb-3">
+                                        <video id="camera-view" autoplay playsinline></video>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button id="captureButton" class="btn btn-primary">Capture Image</button>
+                                        <button id="switchCamera" class="btn btn-outline-secondary">Switch Camera</button>
+                                        <button id="hideCamera" class="btn btn-outline-secondary">Upload Image Instead</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="uploadPreview" class="mt-3" style="display: none;">
+                                    <div class="text-center">
+                                        <h6>Your Image</h6>
+                                        <img id="previewImage" src="" alt="Preview" class="img-fluid mb-2" style="max-height: 200px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div id="matchResults">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Match Results</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <div class="text-center">
+                                                <h6>Original</h6>
+                                                <img id="originalImage" src="" alt="Original" class="img-fluid" style="max-height: 150px;">
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center">
+                                                <h6>Processed</h6>
+                                                <img id="processedImage" src="" alt="Processed" class="img-fluid" style="max-height: 150px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <h6>Best Matches:</h6>
+                                    <div id="matchResultsList"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="noMatches" style="display: none;">
+                            <div class="alert alert-warning">
+                                <h5>No Matches Found</h5>
+                                <p>Try uploading a clearer image or add more items to your catalog.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manage Catalog Tab -->
+            <div class="tab-pane fade" id="catalog" role="tabpanel" aria-labelledby="catalog-tab">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Upload Catalog Images</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('upload_catalog') }}" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="catalogFiles" class="form-label">Select multiple images to add to catalog</label>
+                                <input class="form-control" type="file" id="catalogFiles" name="files" multiple accept=".jpg,.jpeg,.png">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Upload to Catalog</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <h5 class="mb-3">Catalog Images ({{ catalog_images|length }})</h5>
+                
+                {% if catalog_images %}
+                    <div class="catalog-grid">
+                        {% for image in catalog_images %}
+                            <div class="catalog-item">
+                                <div class="catalog-img-container">
+                                    <img src="{{ url_for('static', filename=image.path) }}" alt="{{ image.name }}">
+                                </div>
+                                <div class="catalog-detail">
+                                    <p class="mb-1 text-truncate"><small>{{ image.name }}</small></p>
+                                    <a href="{{ url_for('remove_catalog', image_id=image.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this image from the catalog?');">Remove</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p>No catalog images yet. Upload some images to get started.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Camera functionality
+    let cameraStream = null;
+    let frontCamera = true;
+    const cameraView = document.getElementById('camera-view');
+    
+    async function startCamera() {
+        try {
+            const constraints = {
+                video: { 
+                    facingMode: frontCamera ? "user" : "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+            
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+            
+            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            cameraView.srcObject = cameraStream;
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            alert('Could not access the camera. Please check permissions or try a different browser.');
+        }
+    }
+    
+    // Event handlers
+    document.getElementById('showCamera').addEventListener('click', function() {
+        document.getElementById('uploadContainer').style.display = 'none';
+        document.getElementById('cameraContainer').style.display = 'block';
+        startCamera();
+    });
+    
+    document.getElementById('hideCamera').addEventListener('click', function() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+        document.getElementById('cameraContainer').style.display = 'none';
+        document.getElementById('uploadContainer').style.display = 'block';
+    });
+    
+    document.getElementById('switchCamera').addEventListener('click', function() {
+        frontCamera = !frontCamera;
+        startCamera();
+    });
+    
+    document.getElementById('captureButton').addEventListener('click', function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = cameraView.videoWidth;
+        canvas.height = cameraView.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to blob
+        canvas.toBlob(function(blob) {
+            const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            
+            // Display preview
+            const previewImage = document.getElementById('previewImage');
+            previewImage.src = URL.createObjectURL(blob);
+            document.getElementById('uploadPreview').style.display = 'block';
+            
+            // Submit for matching
+            uploadAndMatch(file);
+        }, 'image/jpeg', 0.95);
+    });
+    
+    // File upload and matching
+    document.getElementById('fileUpload').addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const previewImage = document.getElementById('previewImage');
+            previewImage.src = URL.createObjectURL(file);
+            document.getElementById('uploadPreview').style.display = 'block';
+        }
+    });
+    
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('fileUpload');
+        if (fileInput.files && fileInput.files[0]) {
+            uploadAndMatch(fileInput.files[0]);
+        } else {
+            alert('Please select a file first');
+        }
+    });
+    
+    function uploadAndMatch(file) {
+        // Show loading
+        document.getElementById('matchResultsList').innerHTML = '<div class="text-center my-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Processing and matching your image...</p></div>';
+        document.getElementById('matchResults').style.display = 'block';
+        document.getElementById('noMatches').style.display = 'none';
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        fetch('/match', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayMatchResults(data);
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('matchResults').style.display = 'none';
+            document.getElementById('noMatches').style.display = 'block';
+        });
+    }
+    
+    function displayMatchResults(data) {
+        // Set images
+        document.getElementById('originalImage').src = data.original;
+        document.getElementById('processedImage').src = data.processed;
+        
+        const resultsList = document.getElementById('matchResultsList');
+        resultsList.innerHTML = '';
+        
+        if (data.matches && data.matches.length > 0) {
+            data.matches.forEach(match => {
+                const scoreClass = getScoreClass(match.score);
+                
+                const matchHtml = `
+                    <div class="match-result ${scoreClass}">
+                        <div class="row g-0">
+                            <div class="col-md-4">
+                                <div class="match-img-container">
+                                    <img src="${match.path}" alt="${match.name}" class="img-fluid">
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="match-details">
+                                    <h6>${match.name}</h6>
+                                    <p class="mb-1">Match score: ${(match.score * 100).toFixed(1)}%</p>
+                                    <div class="progress">
+                                        <div class="progress-bar ${getProgressBarClass(match.score)}" 
+                                             role="progressbar" 
+                                             style="width: ${(match.score * 100).toFixed(1)}%;"
+                                             aria-valuenow="${(match.score * 100).toFixed(0)}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            ${(match.score * 100).toFixed(1)}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultsList.innerHTML += matchHtml;
+            });
+        } else {
+            document.getElementById('matchResults').style.display = 'none';
+            document.getElementById('noMatches').style.display = 'block';
+        }
+    }
+    
+    function getScoreClass(score) {
+        if (score >= 0.7) return 'match-score-high';
+        if (score >= 0.4) return 'match-score-medium';
+        return 'match-score-low';
+    }
+    
+    function getProgressBarClass(score) {
+        if (score >= 0.7) return 'bg-success';
+        if (score >= 0.4) return 'bg-warning';
+        return 'bg-danger';
+    }
+</script>
+{% endblock %}
