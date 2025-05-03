@@ -4,32 +4,29 @@ Tile matching module.
 This module implements algorithms for matching tile images:
 - Feature-based matching using ORB
 - Color histogram matching
-- Deep learning-based feature extraction and matching
 """
 
 import cv2
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import os
-import tensorflow as tf
 from pathlib import Path
 
 
 class TileMatcher:
     """Class for matching tile images with a catalog."""
     
-    MATCHING_METHODS = ['feature', 'color', 'deep', 'hybrid']
-    
-    def __init__(self, method='hybrid', model_path=None):
+    def __init__(self, method='feature', model_path=None):
         """
         Initialize the tile matcher.
         
         Args:
-            method: Matching method ('feature', 'color', 'deep', or 'hybrid')
-            model_path: Path to pre-trained model for deep learning-based matching
+            method: Matching method ('feature', 'color', or 'hybrid')
+            model_path: Not used, kept for backward compatibility
         """
-        if method not in self.MATCHING_METHODS:
-            raise ValueError(f"Method must be one of {self.MATCHING_METHODS}")
+        valid_methods = ['feature', 'color', 'hybrid']
+        if method not in valid_methods:
+            raise ValueError(f"Method must be one of {valid_methods}")
             
         self.method = method
         self.catalog = {}  # Will store catalog images and their features
@@ -40,16 +37,9 @@ class TileMatcher:
         # For feature matching with ORB
         self.bf_matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
         
-        # For deep learning-based matching
+        # Deep learning is not supported in this version
         self.model = None
-        if method in ['deep', 'hybrid'] and model_path:
-            try:
-                self.model = tf.keras.models.load_model(model_path)
-            except Exception as e:
-                print(f"Warning: Failed to load model: {e}")
-                if method == 'deep':
-                    self.method = 'feature'  # Fallback to feature-based matching
-    
+
     def add_catalog_image(self, image_path, image_id=None):
         """
         Add an image to the matching catalog.
@@ -82,10 +72,6 @@ class TileMatcher:
         if self.method in ['color', 'hybrid']:
             # Calculate color histograms for each channel
             features['color_hist'] = self.calculate_color_histogram(image)
-        
-        if self.method in ['deep', 'hybrid'] and self.model is not None:
-            # Extract deep features
-            features['deep'] = self.extract_deep_features(image)
         
         # Store the image and its features in the catalog
         self.catalog[image_id] = {
@@ -146,8 +132,6 @@ class TileMatcher:
             matches = self.feature_based_matching(query_image)
         elif self.method == 'color':
             matches = self.color_based_matching(query_image)
-        elif self.method == 'deep' and self.model is not None:
-            matches = self.deep_learning_matching(query_image)
         elif self.method == 'hybrid':
             matches = self.hybrid_matching(query_image)
         else:
@@ -281,60 +265,31 @@ class TileMatcher:
         """
         Extract deep learning features from an image.
         
+        This method is kept for backward compatibility but always returns None
+        since deep learning is not supported in this version.
+        
         Args:
             image: Input BGR image
             
         Returns:
-            Deep features as a numpy array
+            None
         """
-        if self.model is None:
-            return None
-            
-        # Resize to the model's expected input size
-        input_shape = self.model.input_shape[1:3]
-        resized = cv2.resize(image, input_shape)
-        
-        # Preprocess for the model
-        preprocessed = resized.astype(np.float32) / 255.0
-        preprocessed = np.expand_dims(preprocessed, axis=0)
-        
-        # Extract features
-        features = self.model.predict(preprocessed)
-        
-        return features.flatten()
+        return None
     
     def deep_learning_matching(self, query_image):
         """
         Perform deep learning-based matching.
         
+        This method is kept for backward compatibility but always returns an empty list
+        since deep learning is not supported in this version.
+        
         Args:
             query_image: Query image
             
         Returns:
-            List of (image_id, score) tuples sorted by score (descending)
+            Empty list
         """
-        if self.model is None:
-            return []
-            
-        # Extract deep features from the query image
-        query_features = self.extract_deep_features(query_image)
-        
-        matches = []
-        
-        for image_id, catalog_item in self.catalog.items():
-            if 'deep' not in catalog_item['features'] or catalog_item['features']['deep'] is None:
-                continue
-                
-            # Calculate cosine similarity between features
-            similarity = cosine_similarity(
-                query_features.reshape(1, -1),
-                catalog_item['features']['deep'].reshape(1, -1)
-            )[0][0]
-            
-            matches.append((image_id, similarity))
-        
-        # Sort by score (descending)
-        return sorted(matches, key=lambda x: x[1], reverse=True)
+        return []
     
     def hybrid_matching(self, query_image):
         """
@@ -350,12 +305,8 @@ class TileMatcher:
         feature_matches = dict(self.feature_based_matching(query_image))
         color_matches = dict(self.color_based_matching(query_image))
         
-        deep_matches = {}
-        if self.model is not None:
-            deep_matches = dict(self.deep_learning_matching(query_image))
-        
         # Combine the results
-        all_image_ids = set(feature_matches.keys()) | set(color_matches.keys()) | set(deep_matches.keys())
+        all_image_ids = set(feature_matches.keys()) | set(color_matches.keys())
         
         combined_matches = []
         
@@ -363,13 +314,9 @@ class TileMatcher:
             # Get scores from each method, default to 0 if not present
             feature_score = feature_matches.get(image_id, 0)
             color_score = color_matches.get(image_id, 0)
-            deep_score = deep_matches.get(image_id, 0)
             
             # Weight and combine the scores - reducing color weight
-            if self.model is not None:
-                score = 0.5 * feature_score + 0.2 * color_score + 0.3 * deep_score
-            else:
-                score = 0.8 * feature_score + 0.2 * color_score  # Reduced color weight
+            score = 0.8 * feature_score + 0.2 * color_score  # Reduced color weight
             
             combined_matches.append((image_id, score))
         
